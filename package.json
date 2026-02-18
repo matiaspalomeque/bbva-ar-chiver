@@ -1,0 +1,15 @@
+{
+  "name": "bbva-ar-chiver",
+  "version": "1.0.0",
+  "description": "Download all PDF statements from BBVA Argentina online banking",
+  "scripts": {
+    "start": "bun bbva-ar-chiver.ts",
+    "start:headed": "HEADLESS=false bun bbva-ar-chiver.ts"
+  },
+  "dependencies": {
+    "playwright": "^1.50.0"
+  },
+  "devDependencies": {
+    "bun-types": "^1.3.9"
+  }
+}

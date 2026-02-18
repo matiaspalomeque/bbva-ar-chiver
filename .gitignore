@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Environment variables (contains credentials)
+.env
+.env.local
+.env.*.local
+
+# Downloaded PDFs
+bbva-resumenes/
+downloads/
+
+# Playwright
+playwright-report/
+test-results/
+storage/
+.playwright/
+
+# TypeScript
+*.js.map
+dist/
+tsconfig.tsbuildinfo
+
+# Bun
+*.bun
+
+# PDFs (catch-all if BBVA_OUT_DIR is set to current dir)
+*.pdf
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
