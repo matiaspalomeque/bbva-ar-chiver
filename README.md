@@ -66,12 +66,14 @@ Si un archivo ya existe, se omite automáticamente. Podés volver a ejecutar el 
 
 ```
 main()
-  ├─ login()            — completa el formulario (DNI, usuario, clave) y hace clic en Ingresar
-  ├─ goToSummaries()    — navega al menú "Resúmenes y tarjetas → Resúmenes"
-  ├─ getAllStatements()  — inyecta JS en la página para leer el controlador AngularJS (sumCtrl)
-  │                       y obtener la lista de resúmenes disponibles
-  └─ downloadAll()      — descarga cada PDF usando el servicio $http de Angular
-                          (ya autenticado), lo convierte a base64 y lo escribe al disco
+  ├─ login()               — completa el formulario (DNI, usuario, clave) y hace clic en Ingresar
+  ├─ waitForLandingPage()  — espera la redirección a la posición global y descarta el modal
+  │                          de ayuda si aparece
+  ├─ goToSummaries()       — navega al menú "Resúmenes y tarjetas → Resúmenes"
+  ├─ getAllStatements()     — inyecta JS en la página para leer el controlador AngularJS (sumCtrl)
+  │                          y obtener la lista de resúmenes disponibles
+  └─ downloadAll()         — descarga cada PDF usando el servicio $http de Angular
+                             (ya autenticado), lo convierte a base64 y lo escribe al disco
 ```
 
 El script usa Firefox con zona horaria y locale argentinos (`es-AR`, `America/Argentina/Buenos_Aires`) para que la sesión del banco funcione correctamente.

@@ -47,7 +47,7 @@ const CONFIG = {
 };
 
 const TIMINGS = {
-  slowMo:             555,   // retardo global del navegador aplicado a cada acción
+  slowMo:             234,   // retardo global del navegador aplicado a cada acción
   typeDelay:           80,   // ms por tecla al completar campos de formulario
   clickDelay:          90,   // ms por clic en interacciones con la interfaz
   postLoginWait:    2_000,   // tiempo de asentamiento tras la redirección post-login
@@ -93,6 +93,7 @@ async function main() {
 
   try {
     await login(page);
+    await waitForLandingPage(page);
     await goToSummaries(page);
     const stmts = await getAllStatements(page);
     console.log(`\n📄  Se encontraron ${stmts.length} resúmenes\n`);
@@ -102,33 +103,67 @@ async function main() {
   }
 }
 
+async function jitterMouse(page: Page, steps = 3) {
+  for (let i = 0; i < steps; i++) {
+    await page.mouse.move(
+      Math.floor(Math.random() * 1280),
+      Math.floor(Math.random() * 800),
+    );
+    await page.waitForTimeout(60 + Math.floor(Math.random() * 140));
+  }
+}
+
 async function login(page: Page) {
   console.log("🔐  Iniciando sesión…");
   await page.goto(LOGIN_URL, { waitUntil: "domcontentloaded" });
+  await jitterMouse(page, 4);
 
   const docNumberField = page.getByRole("spinbutton", { name: "Número de documento" });
   await docNumberField.pressSequentially(CONFIG.dni, { delay: TIMINGS.typeDelay });
+  await jitterMouse(page);
 
-  const usernameField = await page.getByRole('textbox', { name: 'Usuario' });
+  const usernameField = page.getByRole('textbox', { name: 'Usuario' });
   await usernameField.pressSequentially(CONFIG.usuario, { delay: TIMINGS.typeDelay });
+  await jitterMouse(page);
 
-  const passwordField = await page.getByRole('textbox', { name: 'Clave' });
+  const passwordField = page.getByRole('textbox', { name: 'Clave' });
   await passwordField.pressSequentially(CONFIG.clave, { delay: TIMINGS.typeDelay });
+  await jitterMouse(page, 2);
 
-  const loginButton = await page.getByRole('button', { name: 'Ingresar' });
+  const loginButton = page.getByRole('button', { name: 'Ingresar' });
   await loginButton.click({ delay: TIMINGS.clickDelay });
 
-  await page.waitForURL((url) => url.toString().includes("globalposition"), { timeout: TIMINGS.loginTimeout });
-  await page.waitForLoadState("load", { timeout: TIMINGS.loginTimeout });
-  await page.waitForTimeout(TIMINGS.postLoginWait);
   console.log("✅  Sesión iniciada");
 }
 
+async function dismissModalIfExists(page: Page) {
+  const modal = page.locator('bbva-help-modal-sph[visible]');
+  try {
+    await modal.waitFor({ state: 'visible', timeout: 1500 });
+  } catch {
+    return;
+  }
+  await page.keyboard.press('Escape');
+  await modal.waitFor({ state: 'hidden', timeout: 2000 }).catch(() => {});
+}
+
+async function waitForLandingPage(page: Page) {
+  console.log("🏠  Esperando página principal…");
+  await page.waitForURL((url) => url.toString().includes("globalposition"));
+  await page.waitForLoadState("load", { timeout: TIMINGS.loginTimeout });
+
+  await dismissModalIfExists(page);
+  console.log("✅  Página principal cargada");
+}
+
 async function goToSummaries(page: Page) {
-  const summariesAndCardsButton = await page.getByRole('button', { name: 'Resúmenes y tarjetas' });
+  console.log("📂  Navegando a resúmenes…");
+  const summariesAndCardsButton = page.getByRole('button', { name: 'Resúmenes y tarjetas', exact: true });
   await summariesAndCardsButton.click({ delay: TIMINGS.clickDelay });
 
-  const summariesLink = await page.getByRole('link', { name: 'Resúmenes', exact: true });
+  await dismissModalIfExists(page);
+
+  const summariesLink = page.getByRole('link', { name: 'Resúmenes', exact: true });
   await summariesLink.click({ delay: TIMINGS.clickDelay });
 
   await page.waitForSelector("bbva-card-resumen", { timeout: TIMINGS.summariesTimeout });
@@ -137,6 +172,7 @@ async function goToSummaries(page: Page) {
 }
 
 async function getAllStatements(page: Page): Promise<Statement[]> {
+  console.log("🔍  Obteniendo lista de resúmenes…");
   return page.evaluate(() => {
     const ng = (window as any).angular;
     const root = ng.element(document).injector().get("$rootScope");
@@ -162,6 +198,7 @@ async function getAllStatements(page: Page): Promise<Statement[]> {
 }
 
 async function downloadAll(page: Page, stmts: Statement[]) {
+  console.log("⬇️   Iniciando descarga de resúmenes…");
   const errors: string[] = [];
   let skipped = 0;
 
